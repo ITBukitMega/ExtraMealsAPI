@@ -66,7 +66,7 @@ class ListMasterLoginController extends Controller
             'message' => 'Login Successful, Welcome Back',
             'data' => [
                 'EmpID' => $user->EmpID,
-                'SiteName' => $user->SiteName,
+                'Shift' => $user->Shift,
                 // Tambahkan data user lain yang diperlukan di sini
             ]
         ], 200);
