@@ -15,5 +15,5 @@ class TrAttendance extends Model
 
     public $timestamps = false;
 
-    protected $fillable = ["SiteName", "EmpID", "Date", "CheckIn", "CheckOut", "Lattitude", "Longitude"];
+    protected $fillable = ["SiteName", "EmpID", "Date", "CheckIn", "CheckOut", "Lattitude", "Longitude", "Shift"];
 }
