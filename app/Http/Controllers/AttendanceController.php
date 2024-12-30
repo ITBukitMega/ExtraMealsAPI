@@ -15,6 +15,7 @@ class AttendanceController extends Controller
             $request->validate([
                 'EmpID' => 'required',
                 'Shift' => 'required',
+                'SiteName' => 'required',
                 'Lattitude' => 'required',
                 'Longitude' => 'required'
             ]);
@@ -39,6 +40,7 @@ class AttendanceController extends Controller
             $attendance = TrAttendance::create([
                 'EmpID' => $request->EmpID,
                 'Shift' => $request->Shift,
+                'SiteName' => $request->SiteName,
                 'Date' => $jakartaDate,
                 'CheckIn' => $jakartaTime,
                 'Lattitude' => $request->Lattitude,
