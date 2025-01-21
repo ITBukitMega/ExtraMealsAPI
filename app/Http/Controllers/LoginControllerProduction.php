@@ -43,6 +43,14 @@ class LoginControllerProduction extends Controller
             'appVersion' => 'required'
         ]);
 
+        // Pastikan validasi berhasil sebelum melanjutkan
+    if (!$validate) {
+        return response()->json([
+            'status' => false,
+            'message' => 'Validation failed'
+        ], 422);
+    }
+
 
         Log::info('Validation passed'); // Log jika validasi berhasil
 
