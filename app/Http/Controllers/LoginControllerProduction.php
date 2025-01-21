@@ -37,15 +37,15 @@ class LoginControllerProduction extends Controller
         $request->validate([
             'EmpID' => 'required',
             'Password' => 'required',
-            "appVersion" => 'required'
+            'appVersion' => 'required'
         ]);
 
-         if (!$this->isVersionCompatible($request->appVersion)) {
+         // Check app version first
+        if (!$this->isVersionCompatible($request->appVersion)) {
             return response()->json([
                 'status' => false,
-                'message' => 'Please update your application to the latest version',
-                'requiredVersion' => $this->MINIMUM_APP_VERSION,
-                'updateRequired' => true
+                'message' => 'Version not compatible',
+                'requiredVersion' => $this->MINIMUM_APP_VERSION
             ], 426); // 426 Upgrade Required
         }
 
