@@ -37,11 +37,12 @@ class LoginControllerProduction extends Controller
 
         Log::info('Incoming request', $request->all());
         // Validate request
-        $request->validate([
+        $validate = $request->validate([
             'EmpID' => 'required',
             'Password' => 'required',
             'appVersion' => 'required'
         ]);
+
 
         Log::info('Validation passed'); // Log jika validasi berhasil
 
