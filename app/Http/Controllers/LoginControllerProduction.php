@@ -7,6 +7,8 @@ use App\Models\ListMasterLogin;
 
 class LoginControllerProduction extends Controller
 {
+
+    private $MINIMUM_APP_VERSION = "3.0.2";
     
     public function index()
     {
@@ -34,8 +36,18 @@ class LoginControllerProduction extends Controller
         // Validate request
         $request->validate([
             'EmpID' => 'required',
-            'Password' => 'required'
+            'Password' => 'required',
+            "appVersion" => 'required'
         ]);
+
+         if (!$this->isVersionCompatible($request->appVersion)) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Please update your application to the latest version',
+                'requiredVersion' => $this->MINIMUM_APP_VERSION,
+                'updateRequired' => true
+            ], 426); // 426 Upgrade Required
+        }
 
         // Find user by EmpID
         $user = ListMasterLogin::where('EmpID', $request->EmpID)->first();
@@ -67,5 +79,10 @@ class LoginControllerProduction extends Controller
                 // Tambahkan data user lain yang diperlukan di sini
             ]
         ], 200);
+    }
+
+    private function isVersionCompatible($clientVersion)
+    {
+        return version_compare($clientVersion, $this->MINIMUM_APP_VERSION, '>=');
     }
 }
