@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\ListMasterLogin;
+use Illuminate\Support\Facades\Log;
 
 class LoginControllerProduction extends Controller
 {
@@ -33,12 +34,16 @@ class LoginControllerProduction extends Controller
 
     public function login(Request $request)
     {
+
+        Log::info('Incoming request', $request->all());
         // Validate request
         $request->validate([
             'EmpID' => 'required',
             'Password' => 'required',
             'appVersion' => 'required'
         ]);
+
+        Log::info('Validation passed'); // Log jika validasi berhasil
 
          // Check app version first
         if (!$this->isVersionCompatible($request->appVersion)) {
