@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Validator;
 
 class LoginControllerProduction extends Controller
 {
-    private $MINIMUM_APP_VERSION = "3.0.2";
+    private $MINIMUM_APP_VERSION = "3.1.0";
 
     public function login(Request $request)
     {
