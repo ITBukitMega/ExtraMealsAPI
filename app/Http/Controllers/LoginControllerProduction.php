@@ -15,14 +15,13 @@ class LoginControllerProduction extends Controller
     {
         Log::info('Incoming request', $request->all());
 
-        // Gunakan Validator facade untuk validasi manual
+        // Validate request
         $validator = Validator::make($request->all(), [
             'EmpID' => 'required|string',
             'Password' => 'required|string',
             'appVersion' => 'required|string'
         ]);
 
-        // Jika validasi gagal, return response error
         if ($validator->fails()) {
             return response()->json([
                 'status' => false,
@@ -31,11 +30,11 @@ class LoginControllerProduction extends Controller
             ], 422);
         }
 
-        // Check app version first
-        if (!$this->isVersionCompatible($request->appVersion)) {
+        // Check app version compatibility
+        if (version_compare($request->appVersion, $this->MINIMUM_APP_VERSION, '<')) {
             return response()->json([
                 'status' => false,
-                'message' => 'Version not compatible',
+                'message' => 'Please update your app to continue',
                 'requiredVersion' => $this->MINIMUM_APP_VERSION
             ], 426);
         }
@@ -69,10 +68,5 @@ class LoginControllerProduction extends Controller
                 'Shift' => $user->Shift,
             ]
         ], 200);
-    }
-
-    private function isVersionCompatible($clientVersion)
-    {
-        return version_compare($clientVersion, $this->MINIMUM_APP_VERSION, '>=');
     }
 }
