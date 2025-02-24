@@ -34,59 +34,44 @@ class ListMasterLoginController extends Controller
     }
 
     public function login(Request $request)
-{
-    // Define current app version
-    $CURRENT_VERSION = "3.1.0"; // Sesuaikan dengan versi terbaru aplikasi
+    {
+        // Validate request
+        $request->validate([
+            'EmpID' => 'required',
+            'Password' => 'required'
+        ]);
 
-    // Validate request
-    $request->validate([
-        'EmpID' => 'required',
-        'Password' => 'required',
-        'Version' => 'required'
-    ]);
+        // Find user by EmpID
+        $user = ListMasterLogin::where('EmpID', $request->EmpID)->first();
 
-    // Check app version
-    if ($request->Version !== $CURRENT_VERSION) {
+        // Check if user exists
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'message' => 'EmpID tidak ditemukan'
+            ], 404);
+        }
+
+        // Check if password matches the hashed one stored in the database
+        if (!$user || !hash_equals($user->Password, md5($request->Password))) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Password salah'
+            ], 401);
+        }
+
+        // Login successful
         return response()->json([
-            'status' => false,
-            'message' => 'Versi aplikasi tidak sesuai',
-            'current_version' => $CURRENT_VERSION,
-            'updateRequired' => true,
-            'updateMessage' => 'Silakan update aplikasi ke versi terbaru untuk melanjutkan',
-            'storeUrl' => 'https://your-app-store-url.com' // Sesuaikan dengan URL store aplikasi Anda
-        ], 426); // 426 Upgrade Required
+            'status' => true,
+            'message' => 'Login Successful, Welcome Back',
+            'data' => [
+                'EmpID' => $user->EmpID,
+                'SiteName' => $user->SiteName,
+                'Shift' => $user->Shift,
+                // Tambahkan data user lain yang diperlukan di sini
+            ]
+        ], 200);
     }
-
-    // Find user by EmpID
-    $user = ListMasterLogin::where('EmpID', $request->EmpID)->first();
-
-    // Check if user exists
-    if (!$user) {
-        return response()->json([
-            'status' => false,
-            'message' => 'EmpID tidak ditemukan'
-        ], 404);
-    }
-
-    // Check if password matches
-    if (!hash_equals($user->Password, md5($request->Password))) {
-        return response()->json([
-            'status' => false,
-            'message' => 'Password salah'
-        ], 401);
-    }
-
-    // Login successful
-    return response()->json([
-        'status' => true,
-        'message' => 'Login Successful, Welcome Back',
-        'data' => [
-            'EmpID' => $user->EmpID,
-            'SiteName' => $user->SiteName,
-            'Shift' => $user->Shift,
-        ]
-    ], 200);
-}
 
 
 
