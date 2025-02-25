@@ -38,7 +38,8 @@ class ListMasterLoginController extends Controller
         // Validate request
         $request->validate([
             'EmpID' => 'required',
-            'Password' => 'required'
+            'Password' => 'required',
+            'Version' => 'required'
         ]);
 
         // Find user by EmpID
