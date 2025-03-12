@@ -65,6 +65,7 @@ class LoginControllerProduction extends Controller
             'message' => 'Login Successful, Welcome Back',
             'data' => [
                 'EmpID' => $user->EmpID,
+                'EmpName' => $user->EmpName,
                 'SiteName' => $user->SiteName,
                 'Shift' => $user->Shift,
                 'Used' => $user->Used, // Added Used field to response
