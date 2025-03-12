@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\ListMasterLogin;
+use App\Models\MasterLogin;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
@@ -66,6 +67,78 @@ class LoginControllerProduction extends Controller
                 'EmpID' => $user->EmpID,
                 'SiteName' => $user->SiteName,
                 'Shift' => $user->Shift,
+                'Used' => $user->Used, // Added Used field to response
+            ]
+        ], 200);
+    }
+    
+    public function changePassword(Request $request)
+    {
+        // Validate request
+        $validator = Validator::make($request->all(), [
+            'EmpID' => 'required|string',
+            'oldPassword' => 'required|string',
+            'newPassword' => 'required|string|min:6',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        // Get user from ListMasterLogin to verify old password
+        $user = ListMasterLogin::where('EmpID', $request->EmpID)->first();
+
+        // Check if user exists
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'message' => 'EmpID tidak ditemukan'
+            ], 404);
+        }
+
+        // Verify old password
+        if (!hash_equals($user->Password, md5($request->oldPassword))) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Password lama salah'
+            ], 401);
+        }
+
+        // Check if new password is the default password
+        if ($request->newPassword === 'hallo123') {
+            return response()->json([
+                'status' => false,
+                'message' => 'Password baru tidak boleh sama dengan password default'
+            ], 400);
+        }
+
+        // Update password in MasterLogin (not ListMasterLogin since it's a view)
+        $masterLoginUser = MasterLogin::where('EmpID', $request->EmpID)->first();
+        
+        if (!$masterLoginUser) {
+            return response()->json([
+                'status' => false,
+                'message' => 'User tidak ditemukan di MasterLogin'
+            ], 404);
+        }
+
+        // Update password and set Used to 1
+        $masterLoginUser->Password = md5($request->newPassword);
+        $masterLoginUser->Used = 1;
+        $masterLoginUser->save();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Password berhasil diubah',
+            'data' => [
+                'EmpID' => $user->EmpID,
+                'SiteName' => $user->SiteName,
+                'Shift' => $user->Shift,
+                'Used' => 1, // Now it's set to 1
             ]
         ], 200);
     }

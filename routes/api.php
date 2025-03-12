@@ -7,6 +7,8 @@ use App\Http\Controllers\LoginAttendanceProduction;
 use App\Http\Controllers\LoginControllerProduction;
 
 Route::post("/login", [LoginControllerProduction::class, 'login']);
+Route::post("/change-password", [LoginControllerProduction::class, 'changePassword']); // New route for changing password
+
 // Route::post('/attendance/check-in', [AttendanceController::class, 'checkIn']);
 // Route::post('/attendance/check-out', [AttendanceController::class, 'checkOut']);
 // Route::get('api/attendance/status', [AttendanceController::class, 'checkStatus']);

@@ -12,5 +12,5 @@ class ListMasterLogin extends Model
 
     public $table = "ListMasterLogin";
 
-    public $fillable = ["EmpID", "EmpName", "Password", "Module"];
+    public $fillable = ["EmpID", "EmpName", "Password", "Module", "Used"];
 }
