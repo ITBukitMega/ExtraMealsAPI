@@ -72,20 +72,23 @@ class LoginControllerProduction extends Controller
             ]
         ], 200);
     }
-    
+
     public function changePassword(Request $request)
     {
         // Validate request
         $validator = Validator::make($request->all(), [
             'EmpID' => 'required|string',
             'oldPassword' => 'required|string',
-            'newPassword' => 'required|string|min:6',
+            'newPassword' => 'required|string|min:8|regex:/^(?=.*[A-Za-z])(?=.*\d).*$/',
+        ], [
+            'newPassword.regex' => 'Password baru harus mengandung minimal 1 huruf dan 1 angka',
+            'newPassword.min' => 'Password baru minimal harus 8 karakter',
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'status' => false,
-                'message' => 'Validation failed',
+                'message' => $validator->errors()->first(),
                 'errors' => $validator->errors()
             ], 422);
         }
@@ -119,7 +122,7 @@ class LoginControllerProduction extends Controller
 
         // Update password in MasterLogin (not ListMasterLogin since it's a view)
         $masterLoginUser = MasterLogin::where('EmpID', $request->EmpID)->first();
-        
+
         if (!$masterLoginUser) {
             return response()->json([
                 'status' => false,
