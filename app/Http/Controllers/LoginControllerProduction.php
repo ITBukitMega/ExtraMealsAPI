@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Validator;
 
 class LoginControllerProduction extends Controller
 {
-    private $MINIMUM_APP_VERSION = "3.1.1";
+    private $MINIMUM_APP_VERSION = "3.1.0";
 
     public function login(Request $request)
     {
@@ -20,8 +20,7 @@ class LoginControllerProduction extends Controller
         $validator = Validator::make($request->all(), [
             'EmpID' => 'required|string',
             'Password' => 'required|string',
-            'appVersion' => 'required|string',
-            'Module' => 'required|string',
+            'appVersion' => 'required|string'
         ]);
 
         if ($validator->fails()) {
