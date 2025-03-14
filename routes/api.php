@@ -17,5 +17,7 @@ Route::post("/attendance/check-in-user", [AttendanceProductionController::class,
 Route::post("/attendance/check-out-user", [AttendanceProductionController::class, "checkOut"]);
 Route::get("/attendance/status", [AttendanceProductionController::class, "checkStatus"]);
 
+Route::post('/check-version', [LoginControllerProduction::class, 'checkVersion']);
+
 Route::get("/login/attendance", [LoginAttendanceProduction::class, 'index']);
 Route::post("/login/attendance", [LoginAttendanceProduction::class, 'login']);

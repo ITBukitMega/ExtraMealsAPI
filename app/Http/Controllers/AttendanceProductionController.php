@@ -63,6 +63,28 @@ class AttendanceProductionController extends Controller
         return ['status' => true];
     }
 
+    private function validateAppVersion($appVersion)
+    {
+        $minimumRequiredVersion = "3.1.0";
+        
+        if (empty($appVersion)) {
+            return [
+                'status' => false,
+                'message' => 'App version is required'
+            ];
+        }
+        
+        // Simple version comparison (you might want to use a more sophisticated version comparison)
+        if (version_compare($appVersion, $minimumRequiredVersion, '<')) {
+            return [
+                'status' => false,
+                'message' => 'Versi aplikasi Anda sudah tidak didukung. Silahkan update ke versi terbaru.'
+            ];
+        }
+        
+        return ['status' => true];
+    }
+
     public function checkIn(Request $request)
     {
         try {
@@ -72,9 +94,19 @@ class AttendanceProductionController extends Controller
                 'Shift' => 'required',
                 'SiteName' => 'required',
                 'Lattitude' => 'required',
-                'Longitude' => 'required'
+                'Longitude' => 'required',
+                'AppVersion' => 'required'
             ]);
 
+            // Validate app version
+            $appVersionValidation = $this->validateAppVersion($request->AppVersion);
+            if (!$appVersionValidation['status']) {
+                return response()->json([
+                    'status' => false,
+                    'message' => $appVersionValidation['message']
+                ], 400);
+            }
+            
             // Validate location first
             $locationValidation = $this->validateLocation(
                 $request->SiteName,
@@ -118,7 +150,8 @@ class AttendanceProductionController extends Controller
                 'Date' => $jakartaDate,
                 'CheckIn' => $jakartaTime,
                 'Lattitude' => $request->Lattitude,
-                'Longitude' => $request->Longitude
+                'Longitude' => $request->Longitude,
+                'AppVersion' => $request->AppVersion
             ]);
 
             return response()->json([
@@ -142,8 +175,18 @@ class AttendanceProductionController extends Controller
             $request->validate([
                 'EmpID' => 'required',
                 'Lattitude' => 'required',
-                'Longitude' => 'required'
+                'Longitude' => 'required',
+                'AppVersion' => 'required'
             ]);
+            
+            // Validate app version
+            $appVersionValidation = $this->validateAppVersion($request->AppVersion);
+            if (!$appVersionValidation['status']) {
+                return response()->json([
+                    'status' => false,
+                    'message' => $appVersionValidation['message']
+                ], 400);
+            }
 
             // Set timezone ke Jakarta
             $jakartaTime = Carbon::now('Asia/Jakarta')->format('H:i:s');
@@ -180,9 +223,10 @@ class AttendanceProductionController extends Controller
                 ], 400);
             }
 
-            // Update checkout time only
+            // Update checkout time and app version
             $attendance->update([
-                'CheckOut' => $jakartaTime
+                'CheckOut' => $jakartaTime,
+                'AppVersionOut' => $request->AppVersion
             ]);
 
             return response()->json([

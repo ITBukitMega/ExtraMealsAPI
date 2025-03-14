@@ -72,6 +72,59 @@ class LoginControllerProduction extends Controller
             ]
         ], 200);
     }
+    
+    public function checkVersion(Request $request)
+    {
+        Log::info('Version check request', $request->all());
+        
+        // Validate request
+        $validator = Validator::make($request->all(), [
+            'EmpID' => 'required|string',
+            'appVersion' => 'required|string'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        // Check app version compatibility
+        if (version_compare($request->appVersion, $this->MINIMUM_APP_VERSION, '<')) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Please update your app to continue',
+                'requiredVersion' => $this->MINIMUM_APP_VERSION,
+                'updateRequired' => true
+            ], 426);
+        }
+
+        // Find user by EmpID (optional, to verify user exists)
+        $user = ListMasterLogin::where('EmpID', $request->EmpID)->first();
+
+        // Check if user exists
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'message' => 'EmpID tidak ditemukan'
+            ], 404);
+        }
+
+        // Version check successful
+        return response()->json([
+            'status' => true,
+            'message' => 'Versi aplikasi valid',
+            'data' => [
+                'EmpID' => $user->EmpID,
+                'EmpName' => $user->EmpName,
+                'SiteName' => $user->SiteName,
+                'Shift' => $user->Shift,
+                'Used' => $user->Used
+            ]
+        ], 200);
+    }
 
     public function changePassword(Request $request)
     {
