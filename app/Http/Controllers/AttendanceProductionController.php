@@ -65,7 +65,7 @@ class AttendanceProductionController extends Controller
 
     private function validateAppVersion($appVersion)
     {
-        $minimumRequiredVersion = "3.1.0";
+        $minimumRequiredVersion = "3.1.1";
         
         if (empty($appVersion)) {
             return [
