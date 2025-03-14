@@ -20,7 +20,8 @@ class LoginControllerProduction extends Controller
         $validator = Validator::make($request->all(), [
             'EmpID' => 'required|string',
             'Password' => 'required|string',
-            'appVersion' => 'required|string'
+            'appVersion' => 'required|string',
+            'Module' => 'required|string',
         ]);
 
         if ($validator->fails()) {
