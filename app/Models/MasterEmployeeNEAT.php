@@ -8,6 +8,8 @@ class MasterEmployeeNEAT extends Model
 {
     public $connection = 'sqlsrv2';
     public $table = 'MasterLogin';
+    protected $primaryKey = 'EmpID';
+    public $timestamps = false;
 
     protected $fillable =[
         "EmpID", "Password", "Module"
