@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\ListMasterLogin;
+use App\Models\MasterEmployeeNEAT;
 use App\Models\MasterLogin;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
@@ -41,7 +42,7 @@ class LoginAttendanceProduction extends Controller
         }
 
         // Find user by EmpID
-        $user = ListMasterLogin::where('EmpID', $request->EmpID)->first();
+        $user = MasterEmployeeNEAT::where('EmpID', $request->EmpID)->first();
 
         // Check if user exists
         if (!$user) {
@@ -102,7 +103,7 @@ class LoginAttendanceProduction extends Controller
         }
 
         // Find user by EmpID (optional, to verify user exists)
-        $user = ListMasterLogin::where('EmpID', $request->EmpID)->first();
+        $user = MasterEmployeeNEAT::where('EmpID', $request->EmpID)->first();
 
         // Check if user exists
         if (!$user) {
@@ -147,7 +148,7 @@ class LoginAttendanceProduction extends Controller
         }
 
         // Get user from ListMasterLogin to verify old password
-        $user = ListMasterLogin::where('EmpID', $request->EmpID)->first();
+        $user = MasterEmployeeNEAT::where('EmpID', $request->EmpID)->first();
 
         // Check if user exists
         if (!$user) {
@@ -174,7 +175,7 @@ class LoginAttendanceProduction extends Controller
         }
 
         // Update password in MasterLogin (not ListMasterLogin since it's a view)
-        $masterLoginUser = MasterLogin::where('EmpID', $request->EmpID)->first();
+        $masterLoginUser = MasterEmployeeNEAT::where('EmpID', $request->EmpID)->first();
 
         if (!$masterLoginUser) {
             return response()->json([
