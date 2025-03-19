@@ -8,7 +8,7 @@ use App\Models\MasterLogin;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
-class LoginControllerProduction extends Controller
+class LoginAttendanceProduction extends Controller
 {
     private $MINIMUM_APP_VERSION = "1.0.0";
 
