@@ -60,13 +60,6 @@ class LoginAttendanceProduction extends Controller
             ], 401);
         }
 
-        if($user->Module !== "NEAT"){
-            return response()->json([
-                "status" => false,
-                "message" => "Anda tidak mendapatkan izin untuk akses Module ini"
-            ], 401);
-        }
-
         // Login successful
         return response()->json([
             'status' => true,
