@@ -10,7 +10,7 @@ class TrAttendanceNEAT extends Model
     use HasFactory;
 
     public $connection = 'sqlsrv2';
-    public $table = "TrAttendance";
+    public $table = "dbo.TrAttendance";
     protected $primaryKey = "EmpID";
 
     public $timestamps = false;

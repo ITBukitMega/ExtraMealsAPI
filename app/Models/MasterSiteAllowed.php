@@ -11,7 +11,7 @@ class MasterSiteAllowed extends Model
     use HasFactory;
 
     public $connection = "sqlsrv";
-    public $table = "MasterSite";
+    public $table = "dbo.MasterSite";
     protected $primaryKey = "SiteCode";
 
     public $incrementing = false;

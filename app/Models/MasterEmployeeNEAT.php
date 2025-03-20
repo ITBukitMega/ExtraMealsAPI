@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class MasterEmployeeNEAT extends Model
 {
     public $connection = 'sqlsrv2';
-    public $table = 'MasterLogin';
+    public $table = 'dbo.MasterLogin';
     protected $primaryKey = 'EmpID';
     public $timestamps = false;
     public $incrementing = false;
