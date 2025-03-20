@@ -10,7 +10,7 @@ class ListMasterLoginNEAT extends Model
     //
     use HasFactory;
     public $connection = "sqlsrv2";
-    public $table = "HRIS.dbo.ListMasterLogin";
+    public $table = "NEAT.dbo.ListMasterLogin";
 
     public $fillable = ["EmpID", "EmpName", "Password", "Module", "Used"];
 }
