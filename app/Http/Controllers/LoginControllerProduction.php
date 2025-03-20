@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\ListMasterLogin;
 use App\Models\MasterLogin;
+use Exception;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
@@ -14,7 +15,8 @@ class LoginControllerProduction extends Controller
 
     public function login(Request $request)
     {
-        Log::info('Incoming request', $request->all());
+        try {
+            Log::info('Incoming request', $request->all());
 
         // Validate request
         $validator = Validator::make($request->all(), [
@@ -71,6 +73,15 @@ class LoginControllerProduction extends Controller
                 'Used' => $user->Used, // Added Used field to response
             ]
         ], 200);
+        }catch(Exception $e){
+            Log::error('Login error: ' . $e->getMessage());
+        return response()->json([
+            'status' => false,
+            'message' => 'Server error occurred',
+            'error' => $e->getMessage() // Consider removing this in production
+        ], 500);
+        }
+        
     }
     
     public function checkVersion(Request $request)
