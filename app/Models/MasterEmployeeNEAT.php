@@ -10,8 +10,6 @@ class MasterEmployeeNEAT extends Model
     public $table = 'NEAT.dbo.MasterLogin';
     protected $primaryKey = 'EmpID';
     public $timestamps = false;
-    public $incrementing = false;
-protected $keyType = 'string';
 
     protected $fillable =[
         "EmpID", "Password", "Module"

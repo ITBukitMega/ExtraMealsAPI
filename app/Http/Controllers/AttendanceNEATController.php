@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Carbon\Carbon;
 use App\Models\TrAttendance;
 use App\Models\MasterSiteAllowed;
+use App\Models\TrAttendanceNEAT;
 use Illuminate\Http\Request;
 
 class AttendanceNEATController extends Controller
@@ -131,7 +132,7 @@ class AttendanceNEATController extends Controller
             $jakartaDate = Carbon::now('Asia/Jakarta')->format('Y-m-d');
 
             // Check if already checked in today
-            $existingAttendance = TrAttendance::where('EmpID', $request->EmpID)
+            $existingAttendance = TrAttendanceNEAT::where('EmpID', $request->EmpID)
                 ->where('Date', $jakartaDate)
                 ->first();
 
@@ -143,7 +144,7 @@ class AttendanceNEATController extends Controller
             }
 
             // Create new attendance record
-            $attendance = TrAttendance::create([
+            $attendance = TrAttendanceNEAT::create([
                 'EmpID' => $request->EmpID,
                 'Shift' => $request->Shift,
                 'SiteName' => $request->SiteName,
@@ -193,7 +194,7 @@ class AttendanceNEATController extends Controller
             $jakartaDate = Carbon::now('Asia/Jakarta')->format('Y-m-d');
 
             // Find today's attendance record
-            $attendance = TrAttendance::where('EmpID', $request->EmpID)
+            $attendance = TrAttendanceNEAT::where('EmpID', $request->EmpID)
                 ->where('Date', $jakartaDate)
                 ->first();
 
@@ -251,7 +252,7 @@ class AttendanceNEATController extends Controller
                 'Date' => 'required|date_format:Y-m-d'
             ]);
 
-            $attendance = TrAttendance::where('EmpID', $request->EmpID)
+            $attendance = TrAttendanceNEAT::where('EmpID', $request->EmpID)
                 ->where('Date', $request->Date)
                 ->first();
 
