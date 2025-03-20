@@ -11,7 +11,7 @@ class ListMasterLogin extends Model
     use HasFactory;
 
     public $connection = "sqlsrv";
-    public $table = "dbo.ListMasterLogin";
+    public $table = "HRIS.dbo.ListMasterLogin";
 
     public $fillable = ["EmpID", "EmpName", "Password", "Module", "Used"];
 }

@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class MasterLogin extends Model
 {
     public $connection = "sqlsrv";
-    protected $table = "dbo.MasterLogin";
+    protected $table = "HRIS.dbo.MasterLogin";
 
     protected $primaryKey = "EmpID";
 

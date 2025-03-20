@@ -11,7 +11,7 @@ class TrAttendance extends Model
     use HasFactory;
 
     public $connection = "sqlsrv";
-    public $table = "dbo.TrAttendance";
+    public $table = "HRIS.dbo.TrAttendance";
     protected $primaryKey = "EmpID";
 
     public $timestamps = false;
