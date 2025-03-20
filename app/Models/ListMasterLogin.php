@@ -10,6 +10,7 @@ class ListMasterLogin extends Model
     /** @use HasFactory<\Database\Factories\ListMasterLoginFactory> */
     use HasFactory;
 
+    public $connection = "sqlsrv";
     public $table = "ListMasterLogin";
 
     public $fillable = ["EmpID", "EmpName", "Password", "Module", "Used"];

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class MasterLogin extends Model
 {
+    public $connection = "sqlsrv";
     protected $table = "MasterLogin";
 
     protected $primaryKey = "EmpID";

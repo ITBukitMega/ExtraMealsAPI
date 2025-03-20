@@ -10,6 +10,7 @@ class MasterSiteAllowed extends Model
     /** @use HasFactory<\Database\Factories\MasterSiteAllowedFactory> */
     use HasFactory;
 
+    public $connection = "sqlsrv";
     public $table = "MasterSite";
     protected $primaryKey = "SiteCode";
 

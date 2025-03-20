@@ -10,6 +10,7 @@ class TrAttendance extends Model
     /** @use HasFactory<\Database\Factories\TrAttendanceFactory> */
     use HasFactory;
 
+    public $connection = "sqlsrv";
     public $table = "TrAttendance";
     protected $primaryKey = "EmpID";
 
