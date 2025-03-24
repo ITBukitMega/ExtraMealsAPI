@@ -10,6 +10,9 @@ use Illuminate\Http\Request;
 
 class AttendanceNEATController extends Controller
 {
+    // Define allowed sites
+    private $allowedSites = ['Jakarta', 'Lombok'];
+
     private function calculateDistance($lat1, $lon1, $lat2, $lon2)
     {
         // Convert degrees to radians
@@ -30,38 +33,69 @@ class AttendanceNEATController extends Controller
         return $r * $c; // Returns distance in meters
     }
 
-    private function validateLocation($siteName, $userLat, $userLong)
+    private function findNearestSite($userLat, $userLong)
     {
-        $site = MasterSiteAllowed::where('SiteName', $siteName)->first();
+        // Get all sites from the database
+        $sites = MasterSiteAllowed::whereIn('SiteName', $this->allowedSites)->get();
         
-        if (!$site) {
+        if ($sites->isEmpty()) {
             return [
                 'status' => false,
-                'message' => 'Lokasi site tidak ditemukan dalam database'
+                'message' => 'Tidak ada lokasi yang tersedia dalam database'
             ];
         }
 
-        $distance = $this->calculateDistance(
-            $userLat,
-            $userLong,
-            $site->latitude,
-            $site->longitude
-        );
+        $nearestSite = null;
+        $shortestDistance = PHP_FLOAT_MAX;
+        $withinRadius = false;
 
-        if ($distance > $site->radius) {
+        foreach ($sites as $site) {
+            $distance = $this->calculateDistance(
+                $userLat,
+                $userLong,
+                $site->latitude,
+                $site->longitude
+            );
+
+            // Update the nearest site regardless of radius
+            if ($distance < $shortestDistance) {
+                $shortestDistance = $distance;
+                $nearestSite = $site;
+                $withinRadius = ($distance <= $site->radius);
+            }
+            
+            // If we find a site within radius, we can stop looking
+            if ($withinRadius) {
+                break;
+            }
+        }
+
+        if (!$nearestSite) {
             return [
                 'status' => false,
-                'message' => 'Anda berada diluar radius yang diizinkan. Silahkan mendekat ke lokasi site.',
-                'distance' => round($distance),
-                'allowed_radius' => $site->radius,
+                'message' => 'Tidak dapat menemukan lokasi terdekat'
+            ];
+        }
+
+        if (!$withinRadius) {
+            return [
+                'status' => false,
+                'message' => 'Anda berada diluar radius yang diizinkan. Silahkan mendekat ke lokasi ' . $nearestSite->SiteName,
+                'distance' => round($shortestDistance),
+                'allowed_radius' => $nearestSite->radius,
                 'site_location' => [
-                    'latitude' => $site->latitude,
-                    'longitude' => $site->longitude
-                ]
+                    'latitude' => $nearestSite->latitude,
+                    'longitude' => $nearestSite->longitude
+                ],
+                'site_name' => $nearestSite->SiteName
             ];
         }
 
-        return ['status' => true];
+        return [
+            'status' => true,
+            'site' => $nearestSite,
+            'distance' => round($shortestDistance)
+        ];
     }
 
     private function validateAppVersion($appVersion)
@@ -93,7 +127,7 @@ class AttendanceNEATController extends Controller
             $request->validate([
                 'EmpID' => 'required',
                 'Shift' => 'required',
-                'SiteName' => 'required',
+                'SiteName' => 'nullable', // Make SiteName optional, we'll determine it based on location
                 'Lattitude' => 'required',
                 'Longitude' => 'required',
                 'AppVersion' => 'required'
@@ -108,21 +142,21 @@ class AttendanceNEATController extends Controller
                 ], 400);
             }
             
-            // Validate location first
-            $locationValidation = $this->validateLocation(
-                $request->SiteName,
+            // Find nearest site based on user's coordinates
+            $siteResult = $this->findNearestSite(
                 $request->Lattitude,
                 $request->Longitude
             );
 
-            if (!$locationValidation['status']) {
+            if (!$siteResult['status']) {
                 return response()->json([
                     'status' => false,
-                    'message' => $locationValidation['message'],
+                    'message' => $siteResult['message'],
                     'data' => [
-                        'distance' => $locationValidation['distance'] ?? null,
-                        'allowed_radius' => $locationValidation['allowed_radius'] ?? null,
-                        'site_location' => $locationValidation['site_location'] ?? null
+                        'distance' => $siteResult['distance'] ?? null,
+                        'allowed_radius' => $siteResult['allowed_radius'] ?? null,
+                        'site_location' => $siteResult['site_location'] ?? null,
+                        'site_name' => $siteResult['site_name'] ?? null
                     ]
                 ], 400);
             }
@@ -143,11 +177,14 @@ class AttendanceNEATController extends Controller
                 ], 400);
             }
 
+            // Use the detected site name
+            $actualSiteName = $siteResult['site']->SiteName;
+
             // Create new attendance record
             $attendance = TrAttendanceNEAT::create([
                 'EmpID' => $request->EmpID,
                 'Shift' => $request->Shift,
-                'SiteName' => $request->SiteName,
+                'SiteName' => $actualSiteName, // Use the actual site name based on location
                 'Date' => $jakartaDate,
                 'CheckIn' => $jakartaTime,
                 'Lattitude' => $request->Lattitude,
@@ -157,7 +194,7 @@ class AttendanceNEATController extends Controller
 
             return response()->json([
                 'status' => true,
-                'message' => 'Check-in berhasil',
+                'message' => 'Check-in berhasil di ' . $actualSiteName,
                 'data' => $attendance
             ], 201);
 
@@ -205,21 +242,21 @@ class AttendanceNEATController extends Controller
                 ], 404);
             }
 
-            // Validate location
-            $locationValidation = $this->validateLocation(
-                $attendance->SiteName,
+            // Find nearest site based on user's current coordinates
+            $siteResult = $this->findNearestSite(
                 $request->Lattitude,
                 $request->Longitude
             );
 
-            if (!$locationValidation['status']) {
+            if (!$siteResult['status']) {
                 return response()->json([
                     'status' => false,
-                    'message' => $locationValidation['message'],
+                    'message' => $siteResult['message'],
                     'data' => [
-                        'distance' => $locationValidation['distance'] ?? null,
-                        'allowed_radius' => $locationValidation['allowed_radius'] ?? null,
-                        'site_location' => $locationValidation['site_location'] ?? null
+                        'distance' => $siteResult['distance'] ?? null,
+                        'allowed_radius' => $siteResult['allowed_radius'] ?? null,
+                        'site_location' => $siteResult['site_location'] ?? null,
+                        'site_name' => $siteResult['site_name'] ?? null
                     ]
                 ], 400);
             }
@@ -232,7 +269,7 @@ class AttendanceNEATController extends Controller
 
             return response()->json([
                 'status' => true,
-                'message' => 'Check-out berhasil',
+                'message' => 'Check-out berhasil di ' . $siteResult['site']->SiteName,
                 'data' => $attendance
             ], 200);
 
