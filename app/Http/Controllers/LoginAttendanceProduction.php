@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Validator;
 
 class LoginAttendanceProduction extends Controller
 {
-    private $MINIMUM_APP_VERSION = "1.1.1";
+    private $MINIMUM_APP_VERSION = "1.1.2";
 
     public function login(Request $request)
     {
