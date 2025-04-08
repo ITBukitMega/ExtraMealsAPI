@@ -2,10 +2,11 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\LeaveRequestController;
 use App\Http\Controllers\AttendanceNEATController;
-use App\Http\Controllers\AttendanceProductionController;
 use App\Http\Controllers\LoginAttendanceProduction;
 use App\Http\Controllers\LoginControllerProduction;
+use App\Http\Controllers\AttendanceProductionController;
 
 
 //Routing untuk ExtraMealV3.1.1 
@@ -32,3 +33,5 @@ Route::post("/change-password/attendance", [LoginAttendanceProduction::class, 'c
 Route::post("/attendance/check-in-user/NEAT", [AttendanceNEATController::class, 'checkIn']);
 Route::post("/attendance/check-out-user/NEAT", [AttendanceNEATController::class, "checkOut"]);
 Route::get("/attendance/status/NEAT", [AttendanceNEATController::class, "checkStatus"]);
+
+Route::post("/leave-request/submit/NEAT", [LeaveRequestController::class, 'submitLeaveRequest']);
