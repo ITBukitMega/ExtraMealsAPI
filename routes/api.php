@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\SickLeaveController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\LeaveRequestController;
 use App\Http\Controllers\AttendanceNEATController;
@@ -35,3 +36,4 @@ Route::post("/attendance/check-out-user/NEAT", [AttendanceNEATController::class,
 Route::get("/attendance/status/NEAT", [AttendanceNEATController::class, "checkStatus"]);
 
 Route::post("/leave-request/submit/NEAT", [LeaveRequestController::class, 'submitLeaveRequest']);
+Route::post("/sick-leave/submit/NEAT", [SickLeaveController::class, 'submitSickLeave']);

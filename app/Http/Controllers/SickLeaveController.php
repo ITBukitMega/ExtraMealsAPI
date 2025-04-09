@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\LeaveRequestNEAT;
+use App\Models\SickLeaveRequestNEAT;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
-class LeaveRequestController extends Controller
+class SickLeaveController extends Controller
 {
-    public function submitLeaveRequest(Request $request)
+    public function submitSickLeave(Request $request)
     {
         // Validate the request
         $validator = Validator::make($request->all(), [
@@ -16,15 +16,17 @@ class LeaveRequestController extends Controller
             'EmpName' => 'required|string',
             'SiteName' => 'required|string',
             'Shift' => 'required|string',
-            'LeaveType' => 'required|string',
+            'SicknessType' => 'required|string',
             'StartDate' => 'required|date',
             'EndDate' => 'required|date',
-            'Reason' => 'required|string'
+            'StartTime' => 'required|string',
+            'EndTime' => 'required|string',
+            'Condition' => 'required|string'
         ]);
 
         if ($validator->fails()) {
             return response()->json([
-                'Status' => 'error',
+                'Status' => false,
                 'Message' => 'Validation error',
                 'Errors' => $validator->errors()
             ], 400);
@@ -32,27 +34,29 @@ class LeaveRequestController extends Controller
 
         try {
             // Insert into database using model
-            LeaveRequestNEAT::create([
+            SickLeaveRequestNEAT::create([
                 'EmpID' => $request->EmpID,
                 'EmpName' => $request->EmpName,
                 'SiteName' => $request->SiteName,
                 'Shift' => $request->Shift,
-                'LeaveType' => $request->LeaveType,
+                'SicknessType' => $request->SicknessType,
                 'StartDate' => $request->StartDate,
                 'EndDate' => $request->EndDate,
-                'Reason' => $request->Reason,
+                'StartTime' => $request->StartTime,
+                'EndTime' => $request->EndTime,
+                'Condition' => $request->Condition,
                 'Status' => 'Pending',
                 'CreatedAt' => now()
             ]);
 
             return response()->json([
-                'Status' => 'success',
-                'Message' => 'Leave request submitted successfully'
+                'Status' => true,
+                'Message' => 'Sick leave request submitted successfully'
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
-                'Status' => 'error',
-                'Message' => 'Failed to submit leave request',
+                'Status' => false,
+                'Message' => 'Failed to submit sick leave request',
                 'Error' => $e->getMessage()
             ], 500);
         }
