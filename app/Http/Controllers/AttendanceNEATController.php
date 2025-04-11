@@ -11,7 +11,7 @@ use Illuminate\Http\Request;
 class AttendanceNEATController extends Controller
 {
     // Define allowed sites
-    private $allowedSites = ['Jakarta', 'Lombok'];
+    private $allowedSites = ['Jakarta', 'Lombok', 'TasikMalaya', 'Situbondo', 'Purwakarta'];
 
     private function calculateDistance($lat1, $lon1, $lat2, $lon2)
     {
