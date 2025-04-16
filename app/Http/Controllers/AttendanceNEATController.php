@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Carbon\Carbon;
 use App\Models\TrAttendance;
 use App\Models\MasterSiteAllowed;
+use App\Models\MasterSiteAllowedNEAT;
 use App\Models\TrAttendanceNEAT;
 use Illuminate\Http\Request;
 
@@ -36,7 +37,7 @@ class AttendanceNEATController extends Controller
     private function findNearestSite($userLat, $userLong)
     {
         // Get all sites from the database
-        $sites = MasterSiteAllowed::whereIn('SiteName', $this->allowedSites)->get();
+        $sites = MasterSiteAllowedNEAT::whereIn('SiteName', $this->allowedSites)->get();
         
         if ($sites->isEmpty()) {
             return [
