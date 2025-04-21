@@ -3,17 +3,15 @@
 namespace App\Http\Controllers;
 
 use Carbon\Carbon;
-use App\Models\TrAttendance; 
-use App\Models\MasterSiteAllowed;
+use App\Models\TrAttendanceV2;
 use App\Models\MasterSiteAllowedNEAT;
-use App\Models\TrAttendanceNEAT;
 use Illuminate\Http\Request;
 
-class AttendanceNEATController extends Controller
+class AttendanceV2Controller extends Controller
 {
     // Define allowed sites
     private $allowedSites = ['Jakarta', 'Lombok', 'TasikMalaya', 'Situbondo', 'Purwakarta'];
-
+    
     private function calculateDistance($lat1, $lon1, $lat2, $lon2)
     {
         // Convert degrees to radians
@@ -33,7 +31,7 @@ class AttendanceNEATController extends Controller
         
         return $r * $c; // Returns distance in meters
     }
-
+    
     private function findNearestSite($userLat, $userLong)
     {
         // Get all sites from the database
@@ -98,7 +96,7 @@ class AttendanceNEATController extends Controller
             'distance' => round($shortestDistance)
         ];
     }
-
+    
     private function validateAppVersion($appVersion)
     {
         $minimumRequiredVersion = "1.0.0";
@@ -110,7 +108,6 @@ class AttendanceNEATController extends Controller
             ];
         }
         
-        // Simple version comparison (you might want to use a more sophisticated version comparison)
         if (version_compare($appVersion, $minimumRequiredVersion, '<')) {
             return [
                 'status' => false,
@@ -120,20 +117,21 @@ class AttendanceNEATController extends Controller
         
         return ['status' => true];
     }
-
-    public function checkIn(Request $request)
+    
+    public function recordAttendance(Request $request)
     {
         try {
             // Validate request
             $request->validate([
                 'EmpID' => 'required',
                 'Shift' => 'required',
-                'SiteName' => 'nullable', // Make SiteName optional, we'll determine it based on location
+                'SiteName' => 'nullable',
+                'Type' => 'required|in:Check In,Check Out',
                 'Lattitude' => 'required',
                 'Longitude' => 'required',
                 'AppVersion' => 'required'
             ]);
-
+            
             // Validate app version
             $appVersionValidation = $this->validateAppVersion($request->AppVersion);
             if (!$appVersionValidation['status']) {
@@ -161,44 +159,42 @@ class AttendanceNEATController extends Controller
                     ]
                 ], 400);
             }
-
+            
             // Set timezone ke Jakarta
             $jakartaTime = Carbon::now('Asia/Jakarta')->format('H:i:s');
             $jakartaDate = Carbon::now('Asia/Jakarta')->format('Y-m-d');
-
-            // Check if already checked in today
-            $existingAttendance = TrAttendanceNEAT::where('EmpID', $request->EmpID)
-                ->where('Date', $jakartaDate)
-                ->first();
-
-            if ($existingAttendance) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Anda sudah melakukan check-in hari ini'
-                ], 400);
-            }
-
+            
             // Use the detected site name
             $actualSiteName = $siteResult['site']->SiteName;
-
-            // Create new attendance record
-            $attendance = TrAttendanceNEAT::create([
-                'EmpID' => $request->EmpID,
-                'Shift' => $request->Shift,
-                'SiteName' => $actualSiteName, // Use the actual site name based on location
-                'Date' => $jakartaDate,
-                'CheckIn' => $jakartaTime,
-                'Lattitude' => $request->Lattitude,
-                'Longitude' => $request->Longitude,
-                'AppVersion' => $request->AppVersion
-            ]);
-
+            
+            // Create new attendance record - always create a new record
+            $attendance = new TrAttendanceV2();
+            $attendance->EmpID = $request->EmpID;
+            $attendance->SiteName = $actualSiteName;
+            $attendance->Date = $jakartaDate;
+            $attendance->Time = $jakartaTime;
+            $attendance->Type = $request->Type;
+            $attendance->Lattitude = $request->Lattitude;
+            $attendance->Longitude = $request->Longitude;
+            $attendance->Shift = $request->Shift;
+            $attendance->save();
+            
+            // Get recent attendance records for this user
+            $recentRecords = TrAttendanceV2::where('EmpID', $request->EmpID)
+                ->orderBy('Date', 'desc')
+                ->orderBy('Time', 'desc')
+                ->take(10)
+                ->get();
+            
             return response()->json([
                 'status' => true,
-                'message' => 'Check-in berhasil di ' . $actualSiteName,
-                'data' => $attendance
+                'message' => $request->Type . ' berhasil di ' . $actualSiteName,
+                'data' => [
+                    'current' => $attendance,
+                    'recent' => $recentRecords
+                ]
             ], 201);
-
+            
         } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
@@ -206,100 +202,37 @@ class AttendanceNEATController extends Controller
             ], 500);
         }
     }
-
-    public function checkOut(Request $request)
+    
+    public function getAttendanceLog(Request $request)
     {
         try {
-            // Validate request
             $request->validate([
                 'EmpID' => 'required',
-                'Lattitude' => 'required',
-                'Longitude' => 'required',
-                'AppVersion' => 'required'
+                'Date' => 'nullable|date_format:Y-m-d'
             ]);
             
-            // Validate app version
-            $appVersionValidation = $this->validateAppVersion($request->AppVersion);
-            if (!$appVersionValidation['status']) {
-                return response()->json([
-                    'status' => false,
-                    'message' => $appVersionValidation['message']
-                ], 400);
+            $query = TrAttendanceV2::where('EmpID', $request->EmpID);
+            
+            // Filter by date if provided
+            if ($request->has('Date') && !empty($request->Date)) {
+                $query->where('Date', $request->Date);
+            } else {
+                // Default to the current month
+                $firstDayOfMonth = Carbon::now('Asia/Jakarta')->startOfMonth()->format('Y-m-d');
+                $lastDayOfMonth = Carbon::now('Asia/Jakarta')->endOfMonth()->format('Y-m-d');
+                $query->whereBetween('Date', [$firstDayOfMonth, $lastDayOfMonth]);
             }
-
-            // Set timezone ke Jakarta
-            $jakartaTime = Carbon::now('Asia/Jakarta')->format('H:i:s');
-            $jakartaDate = Carbon::now('Asia/Jakarta')->format('Y-m-d');
-
-            // Find today's attendance record
-            $attendance = TrAttendanceNEAT::where('EmpID', $request->EmpID)
-                ->where('Date', $jakartaDate)
-                ->first();
-
-            if (!$attendance) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Record attendance tidak ditemukan untuk hari ini'
-                ], 404);
-            }
-
-            // Find nearest site based on user's current coordinates
-            $siteResult = $this->findNearestSite(
-                $request->Lattitude,
-                $request->Longitude
-            );
-
-            if (!$siteResult['status']) {
-                return response()->json([
-                    'status' => false,
-                    'message' => $siteResult['message'],
-                    'data' => [
-                        'distance' => $siteResult['distance'] ?? null,
-                        'allowed_radius' => $siteResult['allowed_radius'] ?? null,
-                        'site_location' => $siteResult['site_location'] ?? null,
-                        'site_name' => $siteResult['site_name'] ?? null
-                    ]
-                ], 400);
-            }
-
-            // Update checkout time and app version
-            $attendance->update([
-                'CheckOut' => $jakartaTime,
-                'AppVersionOut' => $request->AppVersion
-            ]);
-
+            
+            $records = $query->orderBy('Date', 'desc')
+                            ->orderBy('Time', 'desc')
+                            ->get();
+            
             return response()->json([
                 'status' => true,
-                'message' => 'Check-out berhasil di ' . $siteResult['site']->SiteName,
-                'data' => $attendance
+                'message' => 'Data retrieved successfully',
+                'data' => $records
             ], 200);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
-            ], 500);
-        }
-    }
-
-    public function checkStatus(Request $request)
-    {
-        try {
-            $request->validate([
-                'EmpID' => 'required',
-                'Date' => 'required|date_format:Y-m-d'
-            ]);
-
-            $attendance = TrAttendanceNEAT::where('EmpID', $request->EmpID)
-                ->where('Date', $request->Date)
-                ->first();
-
-            return response()->json([
-                'status' => true,
-                'message' => 'Status retrieved successfully',
-                'data' => $attendance
-            ], 200);
-
+            
         } catch (\Exception $e) {
             return response()->json([
                 'status' => false,

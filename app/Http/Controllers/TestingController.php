@@ -9,7 +9,7 @@ use App\Models\MasterSiteAllowedNEAT;
 use App\Models\TrAttendanceNEAT;
 use Illuminate\Http\Request;
 
-class AttendanceNEATController extends Controller
+class TestingController extends Controller
 {
     // Define allowed sites
     private $allowedSites = ['Jakarta', 'Lombok', 'TasikMalaya', 'Situbondo', 'Purwakarta'];
