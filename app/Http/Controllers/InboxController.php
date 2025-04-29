@@ -6,6 +6,7 @@ use App\Models\LeaveRequestNEAT;
 use App\Models\SickLeaveRequestNEAT;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Carbon\Carbon;
 
 class InboxController extends Controller
 {
@@ -13,7 +14,9 @@ class InboxController extends Controller
     {
         // Validate the request
         $validator = Validator::make($request->all(), [
-            'EmpID' => 'required|string'
+            'EmpID' => 'required|string',
+            'Month' => 'sometimes|integer|min:1|max:12',
+            'Year' => 'sometimes|integer|min:2000|max:2100'
         ]);
 
         if ($validator->fails()) {
@@ -26,14 +29,38 @@ class InboxController extends Controller
 
         try {
             $empId = $request->EmpID;
+            
+            // Get month and year from request, or use current month/year
+            $month = $request->has('Month') ? $request->Month : Carbon::now()->month;
+            $year = $request->has('Year') ? $request->Year : Carbon::now()->year;
+            
+            // Build date range for filtering
+            $startDate = Carbon::createFromDate($year, $month, 1)->startOfMonth()->format('Y-m-d');
+            $endDate = Carbon::createFromDate($year, $month, 1)->endOfMonth()->format('Y-m-d');
 
-            // Get leave requests for the employee
+            // Get leave requests for the employee within date range
             $leaveRequests = LeaveRequestNEAT::where('EmpID', $empId)
+                ->where(function($query) use ($startDate, $endDate) {
+                    $query->whereBetween('StartDate', [$startDate, $endDate])
+                          ->orWhereBetween('EndDate', [$startDate, $endDate])
+                          ->orWhere(function($q) use ($startDate, $endDate) {
+                              $q->where('StartDate', '<', $startDate)
+                                ->where('EndDate', '>', $endDate);
+                          });
+                })
                 ->orderBy('CreatedAt', 'desc')
                 ->get();
 
-            // Get sick leave requests for the employee
+            // Get sick leave requests for the employee within date range
             $sickLeaveRequests = SickLeaveRequestNEAT::where('EmpID', $empId)
+                ->where(function($query) use ($startDate, $endDate) {
+                    $query->whereBetween('StartDate', [$startDate, $endDate])
+                          ->orWhereBetween('EndDate', [$startDate, $endDate])
+                          ->orWhere(function($q) use ($startDate, $endDate) {
+                              $q->where('StartDate', '<', $startDate)
+                                ->where('EndDate', '>', $endDate);
+                          });
+                })
                 ->orderBy('CreatedAt', 'desc')
                 ->get();
 
