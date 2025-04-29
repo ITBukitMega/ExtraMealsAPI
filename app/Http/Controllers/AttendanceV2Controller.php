@@ -208,7 +208,9 @@ class AttendanceV2Controller extends Controller
         try {
             $request->validate([
                 'EmpID' => 'required',
-                'Date' => 'nullable|date_format:Y-m-d'
+                'Date' => 'nullable|date_format:Y-m-d',
+                'Month' => 'nullable|integer|min:1|max:12',
+                'Year' => 'nullable|integer|min:2000|max:2099'
             ]);
             
             $query = TrAttendanceV2::where('EmpID', $request->EmpID);
@@ -216,10 +218,26 @@ class AttendanceV2Controller extends Controller
             // Filter by date if provided
             if ($request->has('Date') && !empty($request->Date)) {
                 $query->where('Date', $request->Date);
-            } else {
-                // Default to the current month
-                $firstDayOfMonth = Carbon::now('Asia/Jakarta')->startOfMonth()->format('Y-m-d');
-                $lastDayOfMonth = Carbon::now('Asia/Jakarta')->endOfMonth()->format('Y-m-d');
+            } 
+            // Filter by month and year if provided
+            else if ($request->has('Month') && $request->has('Year') && 
+                    !empty($request->Month) && !empty($request->Year)) {
+                
+                $year = $request->Year;
+                $month = $request->Month;
+                
+                // Create date range for the month
+                $startDate = Carbon::createFromDate($year, $month, 1, 'Asia/Jakarta')->format('Y-m-d');
+                $endDate = Carbon::createFromDate($year, $month, 1, 'Asia/Jakarta')
+                            ->endOfMonth()->format('Y-m-d');
+                
+                $query->whereBetween('Date', [$startDate, $endDate]);
+            } 
+            else {
+                // Default to the current month if no filters provided
+                $now = Carbon::now('Asia/Jakarta');
+                $firstDayOfMonth = $now->copy()->startOfMonth()->format('Y-m-d');
+                $lastDayOfMonth = $now->copy()->endOfMonth()->format('Y-m-d');
                 $query->whereBetween('Date', [$firstDayOfMonth, $lastDayOfMonth]);
             }
             
