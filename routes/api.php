@@ -34,5 +34,9 @@ Route::get("/attendance/status/NEAT", [AttendanceNEATController::class, "checkSt
 Route::post("/attendance/record/NEAT", [AttendanceV2Controller::class, 'recordAttendance']);
 Route::get("/attendance/log/NEAT", [AttendanceV2Controller::class, 'getAttendanceLog']);
 
+// Add this route to your routes/api.php file
+
+Route::get('/inbox/NEAT', 'App\Http\Controllers\InboxController@getInbox');
+
 Route::post("/leave-request/submit/NEAT", [LeaveRequestController::class, 'submitLeaveRequest']);
 Route::post("/sick-leave/submit/NEAT", [SickLeaveController::class, 'submitSickLeave']);
