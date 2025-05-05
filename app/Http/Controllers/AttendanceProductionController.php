@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use App\Models\TrAttendance;
 use App\Models\MasterSiteAllowed;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class AttendanceProductionController extends Controller
 {
@@ -29,8 +30,19 @@ class AttendanceProductionController extends Controller
         return $r * $c; // Returns distance in meters
     }
 
-    private function validateLocation($siteName, $userLat, $userLong)
+    private function validateLocation($siteName, $userLat, $userLong, $empId)
     {
+        // Special case for EmpID 99999 - bypass location validation
+        if ($empId === '99999') {
+            Log::info("Special user 99999 location validation bypassed", [
+                'EmpID' => $empId,
+                'SiteName' => $siteName,
+                'Latitude' => $userLat,
+                'Longitude' => $userLong
+            ]);
+            return ['status' => true];
+        }
+
         $site = MasterSiteAllowed::where('SiteName', $siteName)->first();
         
         if (!$site) {
@@ -107,11 +119,22 @@ class AttendanceProductionController extends Controller
                 ], 400);
             }
             
+            // Check if this is the special user
+            $isSpecialUser = $request->EmpID === '99999';
+            if ($isSpecialUser) {
+                Log::info('Special user 99999 check-in attempt', [
+                    'SiteName' => $request->SiteName,
+                    'Latitude' => $request->Lattitude,
+                    'Longitude' => $request->Longitude
+                ]);
+            }
+            
             // Validate location first
             $locationValidation = $this->validateLocation(
                 $request->SiteName,
                 $request->Lattitude,
-                $request->Longitude
+                $request->Longitude,
+                $request->EmpID
             );
 
             if (!$locationValidation['status']) {
@@ -154,6 +177,13 @@ class AttendanceProductionController extends Controller
                 'AppVersion' => $request->AppVersion
             ]);
 
+            if ($isSpecialUser) {
+                Log::info('Special user 99999 check-in successful', [
+                    'Date' => $jakartaDate,
+                    'Time' => $jakartaTime
+                ]);
+            }
+
             return response()->json([
                 'status' => true,
                 'message' => 'Check-in berhasil',
@@ -161,6 +191,11 @@ class AttendanceProductionController extends Controller
             ], 201);
 
         } catch (\Exception $e) {
+            Log::error('Check-in error', [
+                'message' => $e->getMessage(),
+                'EmpID' => $request->EmpID ?? 'unknown'
+            ]);
+            
             return response()->json([
                 'status' => false,
                 'message' => 'Terjadi kesalahan: ' . $e->getMessage()
@@ -188,6 +223,15 @@ class AttendanceProductionController extends Controller
                 ], 400);
             }
 
+            // Check if this is the special user
+            $isSpecialUser = $request->EmpID === '99999';
+            if ($isSpecialUser) {
+                Log::info('Special user 99999 check-out attempt', [
+                    'Latitude' => $request->Lattitude,
+                    'Longitude' => $request->Longitude
+                ]);
+            }
+
             // Set timezone ke Jakarta
             $jakartaTime = Carbon::now('Asia/Jakarta')->format('H:i:s');
             $jakartaDate = Carbon::now('Asia/Jakarta')->format('Y-m-d');
@@ -208,7 +252,8 @@ class AttendanceProductionController extends Controller
             $locationValidation = $this->validateLocation(
                 $attendance->SiteName,
                 $request->Lattitude,
-                $request->Longitude
+                $request->Longitude,
+                $request->EmpID
             );
 
             if (!$locationValidation['status']) {
@@ -229,6 +274,13 @@ class AttendanceProductionController extends Controller
                 'AppVersionOut' => $request->AppVersion
             ]);
 
+            if ($isSpecialUser) {
+                Log::info('Special user 99999 check-out successful', [
+                    'Date' => $jakartaDate,
+                    'Time' => $jakartaTime
+                ]);
+            }
+
             return response()->json([
                 'status' => true,
                 'message' => 'Check-out berhasil',
@@ -236,6 +288,11 @@ class AttendanceProductionController extends Controller
             ], 200);
 
         } catch (\Exception $e) {
+            Log::error('Check-out error', [
+                'message' => $e->getMessage(),
+                'EmpID' => $request->EmpID ?? 'unknown'
+            ]);
+            
             return response()->json([
                 'status' => false,
                 'message' => 'Terjadi kesalahan: ' . $e->getMessage()
@@ -262,6 +319,12 @@ class AttendanceProductionController extends Controller
             ], 200);
 
         } catch (\Exception $e) {
+            Log::error('Check-status error', [
+                'message' => $e->getMessage(),
+                'EmpID' => $request->EmpID ?? 'unknown',
+                'Date' => $request->Date ?? 'unknown'
+            ]);
+            
             return response()->json([
                 'status' => false,
                 'message' => 'Error: ' . $e->getMessage()
